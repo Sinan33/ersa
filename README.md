@@ -1,13 +1,13 @@
 # Ersa | The National Digital Agent
 
 <div align="center">
-  <img src="lo.png" alt="Ersa Logo" width="180" height="auto" />
+  <img src="logo.png" alt="Ersa Logo" width="180" height="auto" />
   <br><br>
   <p>
     <b>Automating Government Services with Advanced AI</b>
   </p>
   <p>
-    <a href="https://rayansu.com/ersa/home">View Live Demo</a>
+    <a href="https://rayansu.com/ersa/">View Live Demo</a>
     ·
     <a href="https://github.com/sinan33/ersa/issues">Report Bug</a>
     ·
@@ -17,17 +17,16 @@
 
 ---
 
-<div align="center">
-  <h3>⚠️ IMPORTANT NOTICE | تنويه هام</h3>
-</div>
+> [!CAUTION]
+> **Due to time constraints and the very late arrival of the final acceptance email for me and my team, only the Frontend interfaces were programmed to be very close to the final shape.**
 
-```diff
-- نظرا لضيق الوقت وكذلك وصول القبول النهائي لي ولفريقي على البريد الإلكتروني بشكل متأخر جدا، تم برمجة الواجهات الأمامية فقط بشكل قريب جدا من الشكل النهائي
+> [!TIP]
+> **(Note: Although we did not attend the workshops, we tried as much as possible to accomplish everything in a completely professional manner, as if it were a platform truly worthy of the stature of Absher and the Ministry of Interior.)**
 
-+ ( علما أننا لم نأخذ ورش العمل أيضا ولكن حاولنا قدر المستطاع إنجاز كل شيء بشكل احترافي كامل وكأنها منصة تليق فعلا بسيادة أبشر ووزارة الداخلية )
+> [!CAUTION]
+> **Note: We are a complete professional team capable of completing the entire project up to the final shape.**
 
-- علما أننا فريق كامل محترف بإمكاننا إنجاز كامل المشروع حتى الشكل النهائي
-
+---
 
 ## 📖 About The Project
 
@@ -86,8 +85,12 @@ To get a local copy up and running, follow these simple steps.
 ```text
 ersa/
 ├── lo.png              # Logo
+├── logo.png            # Full Size Logo
+├── chat.html           # Chat AI & Agent AI
 ├── ersa.mp4            # Promo Video
+├── ersa.pdf            # PDF Presentation
 ├── video-thumb.jpg     # Video Thumbnail
+├── im.jpg              # Crown Prince's IMG
 ├── home.html           # Main Landing Page
 ├── login.html          # Authentication Page
 ├── .htaccess           # URL Rewriting Rules
