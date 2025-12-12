@@ -1,0 +1,1612 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إرساء | الوكيل الرقمي الوطني</title>
+    
+    <link href="https://fonts.cdnfonts.com/css/neo-sans-arabic" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* =========================================
+           المتغيرات والتأسيس
+           ========================================= */
+        :root {
+            --bg-main: #fafafa;
+            --sidebar-bg: #ffffff;
+            --chat-bg: #ffffff;
+            --primary: #0096B9;
+            --primary-dark: #1a1a2e;
+            --text-primary: #2d3748;
+            --text-secondary: #718096;
+            --text-light: #a0aec0;
+            --border: #e2e8f0;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.06);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.08);
+            
+            --font-main: 'Neo Sans Arabic', 'Segoe UI', Tahoma, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            outline: none;
+        }
+        
+        body {
+            font-family: var(--font-main);
+            background: var(--bg-main);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+        }
+
+        /* =========================================
+           الشريط الجانبي
+           ========================================= */
+        .sidebar {
+            width: 280px;
+            background: var(--sidebar-bg);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 24px 16px;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 100;
+            position: relative;
+        }
+
+        .sidebar.hidden-by-canvas {
+            width: 0;
+            padding: 0;
+            border: none;
+            opacity: 0;
+            visibility: hidden;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            margin-bottom: 24px;
+        }
+
+        .new-chat-btn {
+            width: 100%;
+            padding: 12px 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-family: var(--font-main);
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .new-chat-btn:hover {
+            background: #0087a8;
+            transform: translateY(-1px);
+        }
+
+        .new-chat-btn:active {
+            transform: translateY(0);
+        }
+
+        .history-list {
+            flex: 1;
+            overflow-y: auto;
+            margin-top: 8px;
+        }
+
+        .history-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .history-list::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        .empty-history {
+            text-align: center;
+            color: var(--text-light);
+            padding: 60px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .empty-icon {
+            font-size: 2.5rem;
+            opacity: 0.2;
+        }
+
+        .empty-history span {
+            font-size: 0.9rem;
+        }
+
+        .history-item {
+            padding: 12px 14px;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .history-item:hover {
+            background: #f7fafc;
+            border-color: var(--border);
+        }
+
+        .history-item.active {
+            background: #ebf8fb;
+            border-color: #bee3ec;
+        }
+
+        .history-title {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 4px;
+        }
+
+        .history-time {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        /* =========================================
+           المحتوى الرئيسي
+           ========================================= */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: relative;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .main-content.with-canvas {
+            flex: none;
+            width: 50%;
+            margin-left: 50%;
+        }
+
+        .menu-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 50;
+            background: white;
+            border: 1px solid var(--border);
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            box-shadow: var(--shadow-sm);
+            color: var(--text-primary);
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .menu-toggle:hover {
+            background: #f7fafc;
+        }
+
+        /* =========================================
+           Canvas - النافذة الجديدة
+           ========================================= */
+        .canvas-container {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 0;
+            height: 100vh;
+            background: white;
+            border-right: 1px solid var(--border);
+            overflow: hidden;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 80;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .canvas-container.active {
+            width: 50%;
+        }
+
+        .canvas-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, #0096B9 0%, #0087a8 100%);
+            color: white;
+        }
+
+        .canvas-header h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .canvas-close-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .canvas-close-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .canvas-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            background: linear-gradient(135deg, #f8fbff 0%, #f0f9ff 100%);
+        }
+
+        .canvas-icon-wrapper {
+            width: 140px;
+            height: 140px;
+            background: white;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0, 150, 185, 0.15);
+            animation: floatCanvas 3s ease-in-out infinite;
+            border: 2px solid #e0f4f8;
+        }
+
+        @keyframes floatCanvas {
+            0%, 100% { 
+                transform: translateY(0px) scale(1); 
+            }
+            50% { 
+                transform: translateY(-12px) scale(1.02); 
+            }
+        }
+
+        .canvas-icon-wrapper i {
+            font-size: 3.5rem;
+            color: var(--primary);
+        }
+
+        .canvas-text {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            text-align: center;
+            line-height: 1.8;
+            font-weight: 500;
+        }
+
+        .canvas-status {
+            margin-top: 20px;
+            padding: 12px 24px;
+            background: white;
+            border-radius: 12px;
+            color: var(--primary);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: var(--shadow-sm);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { 
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 0.8;
+                transform: scale(1.02);
+            }
+        }
+
+        .canvas-status i {
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* =========================================
+           حاوية المحادثة
+           ========================================= */
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 40px 20px 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chat-container::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 10px;
+        }
+
+        /* =========================================
+           الحالة الفارغة
+           ========================================= */
+        .empty-state {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            background: #ffffff;
+        }
+
+        .empty-state.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .hero-logo {
+            width: 130px;
+            height: auto;
+            margin-bottom: 32px;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .welcome-text {
+            font-size: 1.6rem;
+            color: var(--text-primary);
+            margin-bottom: 48px;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .welcome-text span {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .suggestions-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            max-width: 480px;
+        }
+
+        .suggestion-btn {
+            background: #eafbff;
+            border: none;
+            padding: 16px 20px;
+            border-radius: 12px;
+            text-align: right;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .suggestion-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary);
+        }
+
+        .suggestion-btn i {
+            color: var(--primary);
+            font-size: 0.9rem;
+            transition: transform 0.2s ease;
+        }
+
+        .suggestion-btn:hover i {
+            transform: translateX(-3px);
+        }
+
+        /* =========================================
+           الرسائل
+           ========================================= */
+        .message {
+            display: flex;
+            gap: 12px;
+            max-width: 780px;
+            margin: 0 auto 20px;
+            width: 100%;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .ai .avatar {
+            background: white;
+            color: var(--primary);
+            border: 1px solid var(--border);
+        }
+
+        .user .avatar {
+            background: var(--primary-dark);
+            color: white;
+        }
+
+        .message-content {
+            padding: 14px 18px;
+            border-radius: 16px;
+            font-size: 0.95rem;
+            line-height: 1.8;
+            position: relative;
+            max-width: 100%;
+            word-wrap: break-word;
+        }
+
+        .ai .message-content {
+            background: white;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-top-right-radius: 4px;
+        }
+
+        .user .message-content {
+            background: var(--primary);
+            color: white;
+            border-top-left-radius: 4px;
+        }
+
+        /* تنسيق خاص للمحتوى المنسق */
+        .message-content h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--primary);
+        }
+
+        .message-content ul {
+            margin: 12px 0;
+            padding-right: 20px;
+        }
+
+        .message-content li {
+            margin-bottom: 8px;
+            line-height: 1.7;
+        }
+
+        .message-content .highlight {
+            background: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .message-content .section {
+            margin: 16px 0;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-right: 3px solid var(--primary);
+        }
+
+        .message-content .requirement {
+            display: flex;
+            align-items: start;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .message-content .requirement i {
+            color: var(--primary);
+            margin-top: 4px;
+        }
+
+        .message-content strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* =========================================
+           مؤشر التفكير المحسّن
+           ========================================= */
+        .thinking-container {
+            display: flex;
+            gap: 12px;
+            max-width: 780px;
+            margin: 0 auto 20px;
+            width: 100%;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+        }
+
+        .thinking-container.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .thinking-avatar {
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+            border-radius: 10px;
+            background: white;
+            color: var(--primary);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .thinking-bubble {
+            background: white;
+            border: 1px solid var(--border);
+            padding: 14px 18px;
+            border-radius: 16px;
+            border-top-right-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 200px;
+        }
+
+        .thinking-text {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            animation: fadeText 0.5s ease;
+        }
+
+        @keyframes fadeText {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .thinking-dots {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .thinking-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .thinking-dot:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .thinking-dot:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        @keyframes bounce {
+            0%, 80%, 100% {
+                transform: scale(0);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* =========================================
+           منطقة الإدخال
+           ========================================= */
+        .input-wrapper {
+            padding: 16px 20px 24px;
+            background: linear-gradient(to top, var(--bg-main) 70%, transparent);
+            display: flex;
+            justify-content: center;
+            position: relative;
+            z-index: 50;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .input-wrapper.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .input-box {
+            background: #fff;
+            width: 100%;
+            border: 2px solid #0087a8;
+            max-width: 780px;
+            border-radius: 40px;
+            padding: 6px 6px 6px 18px;
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            transition: all 0.2s ease;
+            font-weight: 400;
+        }
+
+        .input-box:focus-within {
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
+
+        textarea {
+            flex: 1;
+            border: none;
+            background: transparent;
+            resize: none;
+            min-height: 22px;
+            max-height: 150px;
+            font-family: var(--font-main);
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            padding: 10px 0;
+            line-height: 1.5;
+        }
+
+        textarea::placeholder {
+            color: var(--text-light);
+        }
+
+        .send-btn {
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+            background: var(--primary);
+            border-radius: 30px;
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            font-size: 1rem;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            background: #0087a8;
+            transform: scale(1.05);
+        }
+
+        .send-btn:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+
+        .send-btn:disabled {
+            background: var(--text-light);
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 90;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        /* =========================================
+           الاستجابة للموبايل
+           ========================================= */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                right: -100%;
+                top: 0;
+                bottom: 0;
+                width: 280px;
+                box-shadow: var(--shadow-lg);
+            }
+
+            .sidebar.active {
+                right: 0;
+            }
+
+            .sidebar.hidden-by-canvas {
+                width: 280px;
+                padding: 24px 16px;
+                opacity: 1;
+                visibility: visible;
+            }
+
+            .menu-toggle {
+                display: flex;
+            }
+
+            .overlay.active {
+                opacity: 1;
+                visibility: visible;
+            }
+
+            .main-content.with-canvas {
+                width: 100%;
+                margin-left: 0;
+            }
+
+            .canvas-container.active {
+                width: 100%;
+            }
+
+            .hero-logo {
+                width: 100px;
+            }
+
+            .welcome-text {
+                font-size: 1.3rem;
+                margin-bottom: 36px;
+            }
+
+            .suggestions-wrapper {
+                max-width: 100%;
+            }
+
+            .suggestion-btn {
+                padding: 14px 18px;
+                font-size: 0.9rem;
+            }
+
+            .message {
+                max-width: 100%;
+            }
+
+            .chat-container {
+                padding: 80px 16px 16px;
+            }
+
+            .input-wrapper {
+                padding: 12px 16px 20px;
+            }
+
+            .input-box {
+                border-radius: 14px;
+            }
+
+            .canvas-icon-wrapper {
+                width: 100px;
+                height: 100px;
+            }
+
+            .canvas-icon-wrapper i {
+                font-size: 2.5rem;
+            }
+
+            .canvas-text {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .welcome-text {
+                font-size: 1.15rem;
+            }
+
+            .hero-logo {
+                width: 85px;
+            }
+
+            .avatar {
+                width: 32px;
+                height: 32px;
+                min-width: 32px;
+            }
+
+            .thinking-avatar {
+                width: 32px;
+                height: 32px;
+                min-width: 32px;
+            }
+
+            .message-content {
+                font-size: 0.9rem;
+                padding: 12px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <button class="menu-toggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <button class="new-chat-btn" onclick="startNewChat()">
+                <i class="fas fa-plus"></i>
+                <span>محادثة جديدة</span>
+            </button>
+        </div>
+        
+        <div class="history-list" id="historyList">
+            <div class="empty-history">
+                <i class="far fa-comments empty-icon"></i>
+                <span>لا توجد محادثات سابقة</span>
+            </div>
+        </div>
+    </aside>
+
+    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Canvas - النافذة الجديدة -->
+    <div class="canvas-container" id="canvasContainer">
+        <div class="canvas-header" style="background: linear-gradient(30deg, #00d37b,#00753f);">
+            <h2>
+                <i class="fas fa-globe"></i>
+                الدخول إلى أبشر
+            </h2>
+            <button class="canvas-close-btn" onclick="closeCanvas()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="canvas-content">
+            <div class="canvas-icon-wrapper">
+                <i class="fas fa-laptop-code" style="color: #00753f;"></i>
+            </div>
+            <div class="canvas-text">
+                هنا يتم ربط منصة أبشر بالكامل عبر API معتمد
+                <br>
+                بالتالي يقوم الوكيل بتنفيذ المهام بالكامل
+            </div>
+            <div class="canvas-status">
+                <i class="fas fa-circle-notch" style="color: #00753f;"></i>
+                <span style="color: #00753f;">جاري التحميل...</span>
+            </div>
+        </div>
+    </div>
+
+    <main class="main-content" id="mainContent">
+        
+        <div class="chat-container" id="chatContainer">
+            <div class="empty-state" id="emptyState">
+                <img src="lo.png" alt="شعار إرساء" class="hero-logo">
+                
+                <h1 class="welcome-text">مرحباً، أنا <span>إرساء</span>، وكيلك الرقمي</h1>
+
+                <div class="suggestions-wrapper">
+                    <button class="suggestion-btn" onclick="sendSuggestion('كيف أقوم بإصدار تأشيرة خروج وعودة من أبشر؟', 1)">
+                        <span>كيف أقوم بإصدار تأشيرة خروج وعودة من أبشر؟</span>
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    
+                    <button class="suggestion-btn" onclick="sendSuggestion('أرغب في رؤية بياناتي الشخصية على أبشر وتاريخ سريان الهوية', 2)">
+                        <span>أرغب في رؤية بياناتي الشخصية على أبشر وتاريخ سريان الهوية</span>
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    
+                    <button class="suggestion-btn" onclick="sendSuggestion('أحتاج مساعدة في حجز موعد على أبشر للجوازات', 3)">
+                        <span>أحتاج مساعدة في حجز موعد على أبشر للجوازات</span>
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="messagesWrapper"></div>
+            
+            <!-- مؤشر التفكير المحسّن -->
+            <div class="thinking-container" id="thinkingContainer">
+                <div class="thinking-avatar">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="thinking-bubble">
+                    <div class="thinking-text" id="thinkingText">جاري التفكير...</div>
+                    <div class="thinking-dots">
+                        <div class="thinking-dot"></div>
+                        <div class="thinking-dot"></div>
+                        <div class="thinking-dot"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-wrapper" id="inputWrapper">
+            <div class="input-box">
+                <textarea 
+                    id="messageInput" 
+                    placeholder="اكتب رسالتك هنا..." 
+                    rows="1" 
+                    oninput="autoResize(this)"
+                ></textarea>
+                <button class="send-btn" id="sendBtn" onclick="handleSend()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // =========================================
+        // البيانات والعناصر
+        // =========================================
+        
+        let chats = [];
+        let currentChatId = null;
+        let conversationStage = 0; // مرحلة المحادثة
+        let selectedTopic = 0; // الموضوع المختار (1، 2، أو 3)
+        let canvasOpened = false;
+        let awaitingConfirmation = false; // في انتظار تأكيد
+        
+        const chatContainer = document.getElementById('chatContainer');
+        const messagesWrapper = document.getElementById('messagesWrapper');
+        const emptyState = document.getElementById('emptyState');
+        const thinkingContainer = document.getElementById('thinkingContainer');
+        const thinkingText = document.getElementById('thinkingText');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const inputWrapper = document.getElementById('inputWrapper');
+        const canvasContainer = document.getElementById('canvasContainer');
+        const mainContent = document.getElementById('mainContent');
+        const sidebar = document.getElementById('sidebar');
+
+        // عبارات التفكير المتنوعة لكل مرحلة
+        const thinkingPhrasesByStage = {
+            1: [
+                'جاري فهم استفسارك...',
+                'أحلل طلبك...',
+                'أجمع المعلومات اللازمة...',
+                'أراجع متطلبات الخدمة...'
+            ],
+            2: [
+                'أتحقق من صلاحياتك...',
+                'أفحص المتطلبات الأساسية...',
+                'أراجع البيانات المطلوبة...',
+                'أدقق في التفاصيل...'
+            ],
+            3: [
+                'جاري الاتصال بمنصة أبشر...',
+                'أقوم بالإجراءات اللازمة...',
+                'أحضّر واجهة الخدمة...',
+                'جاري تفعيل الخدمة...'
+            ]
+        };
+
+        let thinkingInterval = null;
+
+        // =========================================
+        // الردود التفصيلية حسب الموضوع
+        // =========================================
+        const detailedResponses = {
+            1: {
+                initial: `
+                    <h3>إصدار تأشيرة خروج وعودة</h3>
+                    <p>أهلاً بك! يمكنني مساعدتك في إصدار تأشيرة خروج وعودة من خلال منصة أبشر. هذه الخدمة تتيح لك السفر والعودة خلال فترة صلاحية التأشيرة.</p>
+                    
+                    <div class="section">
+                        <strong>نبذة عن الخدمة:</strong><br>
+                        تتيح لك هذه الخدمة إصدار تأشيرة خروج وعودة لمدة شهرين أو ثلاثة أشهر، بتكلفة 200 ريال لمدة شهرين أو 100 ريال للزيارة العائلية.
+                    </div>
+                    
+                    <p><strong>هل ترغب في إصدار تأشيرة خروج وعودة الآن؟</strong></p>
+                `,
+                confirmed: `
+                    <h3>حسناً، سأقوم بإصدار التأشيرة لك</h3>
+                    <p>قبل البدء، يجب التأكد من توفر عدة نقاط أساسية:</p>
+                    
+                    <div class="section">
+                        <strong>المتطلبات الأساسية:</strong>
+                        <ul>
+                            <li><div class="requirement"><i class="fas fa-check-circle"></i><span><strong>صلاحية الهوية:</strong> يجب أن تكون هويتك الوطنية أو الإقامة سارية المفعول</span></div></li>
+                            <li><div class="requirement"><i class="fas fa-check-circle"></i><span><strong>سداد المخالفات:</strong> عدم وجود أي مخالفات مرورية أو إدارية غير مسددة</span></div></li>
+                            <li><div class="requirement"><i class="fas fa-check-circle"></i><span><strong>جواز السفر:</strong> جواز سفر ساري لمدة لا تقل عن 6 أشهر</span></div></li>
+                            <li><div class="requirement"><i class="fas fa-check-circle"></i><span><strong>الرصيد:</strong> توفر الرسوم المطلوبة (200 ريال لمدة شهرين)</span></div></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="section">
+                        <strong>خطوات الإصدار:</strong>
+                        <ul>
+                            <li>التحقق من البيانات الشخصية</li>
+                            <li>اختيار مدة التأشيرة (شهرين أو ثلاثة أشهر)</li>
+                            <li>سداد الرسوم إلكترونياً</li>
+                            <li>الحصول على التأشيرة فوراً</li>
+                        </ul>
+                    </div>
+                    
+                    <p><strong>هل أنت جاهز للبدء في عملية الإصدار؟</strong></p>
+                `,
+                final: `
+                    <h3>ممتاز! جاري تحضير كل شيء</h3>
+                    <p>سأقوم الآن بفتح منصة أبشر وتجهيز نموذج إصدار تأشيرة الخروج والعودة لك.</p>
+                    
+                    <div class="section">
+                        <strong>ما سيتم عمله:</strong>
+                        <ul>
+                            <li>✓ فتح صفحة الخدمات الإلكترونية</li>
+                            <li>✓ الانتقال إلى قسم التأشيرات</li>
+                            <li>✓ تعبئة البيانات الأولية</li>
+                            <li>✓ عرض نموذج الإصدار للمراجعة النهائية</li>
+                        </ul>
+                    </div>
+                    
+                    <p class="highlight">⏱ يُرجى الانتظار بضع ثوانٍ...</p>
+                `,
+                declined: `
+                    <p>حسنا، لا مشكلة على الإطلاق.</p>
+                    <p>إذا احتجت المساعدة في إصدار التأشيرة لاحقاً، أو كان لديك أي استفسار آخر، فأنا هنا لمساعدتك في أي وقت.</p>
+                    <p><strong>هل هناك خدمة أخرى يمكنني مساعدتك بها؟</strong></p>
+                `
+            },
+            2: {
+                initial: `
+                    <h3>عرض البيانات الشخصية وتاريخ سريان الهوية</h3>
+                    <p>يسرني مساعدتك في الاطلاع على بياناتك الشخصية المسجلة في منصة أبشر والتحقق من تاريخ انتهاء صلاحية هويتك.</p>
+                    
+                    <div class="section">
+                        <strong>ما يمكنك الاطلاع عليه:</strong>
+                        <ul>
+                            <li>الاسم الكامل (بالعربية والإنجليزية)</li>
+                            <li>رقم الهوية الوطنية</li>
+                            <li>تاريخ الميلاد ومكانه</li>
+                            <li>تاريخ إصدار الهوية وانتهائها</li>
+                            <li>العنوان المسجل</li>
+                            <li>معلومات جواز السفر</li>
+                        </ul>
+                    </div>
+                    
+                    <p><strong>هل ترغب في عرض بياناتك الشخصية الآن؟</strong></p>
+                `,
+                confirmed: `
+                    <h3>تمام، سأعرض بياناتك الشخصية</h3>
+                    <p>قبل عرض البيانات، يجب التأكد من عدة نقاط:</p>
+                    
+                    <div class="section">
+                        <strong>التحقق من الهوية:</strong>
+                        <ul>
+                            <li><div class="requirement"><i class="fas fa-shield-alt"></i><span><strong>التوثيق:</strong> سيتم التحقق من هويتك عبر أبشر</span></div></li>
+                            <li><div class="requirement"><i class="fas fa-shield-alt"></i><span><strong>الخصوصية:</strong> جميع بياناتك محمية وفقاً لأنظمة حماية البيانات</span></div></li>
+                            <li><div class="requirement"><i class="fas fa-shield-alt"></i><span><strong>الصلاحية:</strong> سيتم عرض حالة صلاحية الهوية</span></div></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="section">
+                        <strong>البيانات التي ستظهر:</strong>
+                        <ul>
+                            <li>المعلومات الشخصية الكاملة</li>
+                            <li>تاريخ انتهاء الهوية (بالهجري والميلادي)</li>
+                            <li>الأيام المتبقية على انتهاء الصلاحية</li>
+                            <li>إشعار إن كانت الهوية قريبة من الانتهاء</li>
+                        </ul>
+                    </div>
+                    
+                    <p><strong>هل تؤكد رغبتك في عرض البيانات؟</strong></p>
+                `,
+                final: `
+                    <h3>ممتاز! جاري تحضير صفحة البيانات</h3>
+                    <p>سأقوم الآن بفتح منصة أبشر وعرض بياناتك الشخصية الكاملة مع تفاصيل صلاحية الهوية.</p>
+                    
+                    <div class="section">
+                        <strong>ما سيظهر لك:</strong>
+                        <ul>
+                            <li>✓ لوحة معلومات البيانات الشخصية</li>
+                            <li>✓ تفاصيل الهوية الوطنية</li>
+                            <li>✓ حالة الصلاحية والتواريخ</li>
+                            <li>✓ معلومات جواز السفر إن وجد</li>
+                        </ul>
+                    </div>
+                    
+                    <p class="highlight">⏱ جاري الاتصال بالمنصة...</p>
+                `,
+                declined: `
+                    <p>حسناً، لا بأس بذلك.</p>
+                    <p>بإمكانك الرجوع لعرض بياناتك في أي وقت تشاء. إذا كنت بحاجة لأي خدمة أخرى من خدمات أبشر، فأنا جاهز لمساعدتك.</p>
+                    <p><strong>ماذا تحتاج أيضاً؟</strong></p>
+                `
+            },
+            3: {
+                initial: `
+                    <h3>حجز موعد في الجوازات</h3>
+                    <p>يسعدني مساعدتك في حجز موعد لزيارة أحد مكاتب الجوازات من خلال منصة أبشر.</p>
+                    
+                    <div class="section">
+                        <strong>الخدمات المتاحة للحجز:</strong>
+                        <ul>
+                            <li>إصدار جواز سفر جديد</li>
+                            <li>تجديد جواز سفر</li>
+                            <li>إصدار وثيقة سفر</li>
+                            <li>خدمات الإقامة</li>
+                            <li>استفسارات عامة</li>
+                        </ul>
+                    </div>
+                    
+                    <p><strong>هل ترغب في حجز موعد في الجوازات؟</strong></p>
+                `,
+                confirmed: `
+                    <h3>ممتاز، سأساعدك في حجز الموعد</h3>
+                    <p>قبل البدء في الحجز، دعني أوضح لك الخطوات والمتطلبات:</p>
+                    
+                    <div class="section">
+                        <strong>ما تحتاجه للحجز:</strong>
+                        <ul>
+                            <li><div class="requirement"><i class="fas fa-calendar-check"></i><span><strong>نوع الخدمة:</strong> تحديد الخدمة المطلوبة</span></div></li>
+                            <li><div class="requirement"><i class="fas fa-calendar-check"></i><span><strong>المدينة والمكتب:</strong> اختيار مكتب الجوازات المناسب</span></div></li>
+                            <li><div class="requirement"><i class="fas fa-calendar-check"></i><span><strong>التاريخ والوقت:</strong> اختيار الموعد المناسب من المواعيد المتاحة</span></div></li>
+                            <li><div class="requirement"><i class="fas fa-calendar-check"></i><span><strong>الهوية الوطنية:</strong> إحضارها معك يوم الموعد</span></div></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="section">
+                        <strong>خطوات الحجز:</strong>
+                        <ul>
+                            <li>اختيار نوع الخدمة</li>
+                            <li>تحديد المنطقة والمكتب</li>
+                            <li>اختيار التاريخ والوقت المناسب</li>
+                            <li>تأكيد الحجز واستلام رقم الموعد</li>
+                        </ul>
+                    </div>
+                    
+                    <p><strong>هل أنت جاهز لبدء عملية الحجز؟</strong></p>
+                `,
+                final: `
+                    <h3>رائع! جاري تحضير صفحة الحجز</h3>
+                    <p>سأقوم الآن بفتح منصة أبشر وتوجيهك مباشرة إلى صفحة حجز المواعيد في الجوازات.</p>
+                    
+                    <div class="section">
+                        <strong>ما سنقوم به:</strong>
+                        <ul>
+                            <li>✓ فتح قسم المواعيد</li>
+                            <li>✓ عرض الخدمات المتاحة</li>
+                            <li>✓ إظهار المواعيد المتوفرة</li>
+                            <li>✓ تسهيل عملية الحجز</li>
+                        </ul>
+                    </div>
+                    
+                    <p class="highlight">⏱ جاري تجهيز النظام...</p>
+                `,
+                declined: `
+                    <p>حسناً، لا مشكلة.</p>
+                    <p>إذا قررت حجز موعد لاحقاً، يمكنك العودة في أي وقت. أنا هنا دائماً لمساعدتك في جميع خدمات أبشر.</p>
+                    <p><strong>هل يوجد شيء آخر أستطيع مساعدتك به؟</strong></p>
+                `
+            }
+        };
+
+        // =========================================
+        // إدارة الإرسال
+        // =========================================
+        function handleSend() {
+            const text = messageInput.value.trim();
+            if (!text) return;
+
+            messageInput.disabled = true;
+            sendBtn.disabled = true;
+
+            emptyState.classList.add('hidden');
+            
+            addMessage('user', text);
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            
+            if (!currentChatId) {
+                createNewChatSession(text);
+            } else {
+                saveChatToHistory(text, 'user');
+            }
+
+            // تحليل الرد
+            processUserResponse(text);
+        }
+
+        // معالجة رد المستخدم
+        function processUserResponse(text) {
+            const lowerText = text.toLowerCase();
+            
+            const isRejection = lowerText.includes('لا') || lowerText.includes('لست') || 
+                               lowerText.includes('غير') || lowerText.includes('ليس') ||
+                               lowerText.includes('رفض') || lowerText.includes('ألغي') ||
+                               lowerText.includes('no') || lowerText.includes('cancel') || 
+                               lowerText.includes('stop');
+
+            if (awaitingConfirmation) {
+                // 1. إذا كان الرد يتضمن رفضاً صريحاً
+                if (isRejection) {
+                    conversationStage = 0;
+                    awaitingConfirmation = false;
+                    
+                    showThinking(1);
+                    setTimeout(() => {
+                        hideThinking();
+                        
+                        const response = detailedResponses[selectedTopic].declined;
+                        addMessage('ai', response, true);
+                        saveChatToHistory(response, 'ai');
+                        
+                        messageInput.disabled = false;
+                        sendBtn.disabled = false;
+                        messageInput.focus();
+                    }, 2000);
+                } 
+                // 2. أي شيء آخر يُعتبر موافقة (حتى لو نص عشوائي أو إنجليزي)
+                else {
+                    conversationStage++;
+                    showThinking(conversationStage);
+                    
+                    setTimeout(() => {
+                        hideThinking();
+                        
+                        if (conversationStage === 2) {
+                            // المرحلة 2: تفاصيل الإجراءات
+                            const response = detailedResponses[selectedTopic].confirmed;
+                            addMessage('ai', response, true);
+                            saveChatToHistory(response, 'ai');
+                            awaitingConfirmation = true;
+                        } else if (conversationStage === 3) {
+                            // المرحلة 3: الرد النهائي وفتح Canvas
+                            const response = detailedResponses[selectedTopic].final;
+                            addMessage('ai', response, true);
+                            saveChatToHistory(response, 'ai');
+                            awaitingConfirmation = false;
+                            
+                            // فتح Canvas بعد 3 ثواني
+                            setTimeout(() => {
+                                openCanvas();
+                            }, 3000);
+                        }
+                        
+                        messageInput.disabled = false;
+                        sendBtn.disabled = false;
+                        messageInput.focus();
+                    }, 3500);
+                }
+            } else {
+                // رد عام في حال لم نكن ننتظر تأكيداً
+                showThinking(1);
+                setTimeout(() => {
+                    hideThinking();
+                    
+                    const response = getGeneralResponse(text);
+                    addMessage('ai', response, true);
+                    saveChatToHistory(response, 'ai');
+                    
+                    messageInput.disabled = false;
+                    sendBtn.disabled = false;
+                    messageInput.focus();
+                }, 2500);
+            }
+        }
+
+        // إرسال الاقتراح
+        function sendSuggestion(text, topicNumber) {
+            selectedTopic = topicNumber;
+            conversationStage = 1;
+            awaitingConfirmation = true;
+            
+            // إخفاء الحالة الفارغة
+            emptyState.classList.add('hidden');
+            
+            // إضافة رسالة المستخدم
+            addMessage('user', text);
+            
+            if (!currentChatId) {
+                createNewChatSession(text);
+            } else {
+                saveChatToHistory(text, 'user');
+            }
+
+            // عرض التفكير
+            showThinking(1);
+            
+            setTimeout(() => {
+                hideThinking();
+                
+                // الرد الأولي
+                const response = detailedResponses[topicNumber].initial;
+                addMessage('ai', response, true);
+                saveChatToHistory(response, 'ai');
+                
+                // إظهار حقل الإدخال
+                inputWrapper.classList.add('visible');
+                messageInput.focus();
+            }, 3000);
+        }
+
+        // إضافة رسالة
+        function addMessage(type, text, isHTML = false) {
+            const div = document.createElement('div');
+            div.className = `message ${type}`;
+            
+            const avatar = type === 'user' 
+                ? '<i class="far fa-user"></i>' 
+                : '<i class="fas fa-star"></i>';
+            
+            const content = isHTML ? text : escapeHtml(text);
+            
+            div.innerHTML = `
+                <div class="avatar">${avatar}</div>
+                <div class="message-content">${content}</div>
+            `;
+            
+            messagesWrapper.appendChild(div);
+            scrollToBottom();
+        }
+
+        // =========================================
+        // إدارة الـ Canvas
+        // =========================================
+        function openCanvas() {
+            canvasOpened = true;
+            
+            canvasContainer.classList.add('active');
+            mainContent.classList.add('with-canvas');
+            sidebar.classList.add('hidden-by-canvas');
+            
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('active');
+                document.getElementById('overlay').classList.remove('active');
+            }
+        }
+
+        function closeCanvas() {
+            canvasOpened = false;
+            
+            canvasContainer.classList.remove('active');
+            mainContent.classList.remove('with-canvas');
+            sidebar.classList.remove('hidden-by-canvas');
+        }
+
+        // =========================================
+        // نظام التفكير المحسّن
+        // =========================================
+        function showThinking(stage) {
+            thinkingContainer.classList.add('active');
+            scrollToBottom();
+            
+            const phrases = thinkingPhrasesByStage[stage] || thinkingPhrasesByStage[1];
+            let phraseIndex = 0;
+            thinkingText.textContent = phrases[0];
+            
+            thinkingInterval = setInterval(() => {
+                phraseIndex = (phraseIndex + 1) % phrases.length;
+                thinkingText.textContent = phrases[phraseIndex];
+            }, 1200);
+        }
+
+        function hideThinking() {
+            thinkingContainer.classList.remove('active');
+            if (thinkingInterval) {
+                clearInterval(thinkingInterval);
+                thinkingInterval = null;
+            }
+        }
+
+        // =========================================
+        // ردود عامة
+        // =========================================
+        function getGeneralResponse(input) {
+            const text = input.toLowerCase();
+            
+            if (text.includes('شكر') || text.includes('thanks')) {
+                return '<p>العفو! يسعدني خدمتك دائماً. أنا هنا لمساعدتك في أي وقت.</p><p><strong>هل يوجد خدمة أخرى تحتاجها؟</strong></p>';
+            }
+            
+            return '<p>شكراً لتواصلك معي. يمكنني مساعدتك في العديد من خدمات أبشر الإلكترونية.</p><p>يُرجى اختيار أحد الخيارات من القائمة الرئيسية أو إخباري بما تحتاجه بالتحديد.</p>';
+        }
+
+        // =========================================
+        // إدارة المحفوظات
+        // =========================================
+        function createNewChatSession(firstMessage) {
+            currentChatId = Date.now();
+            const newChat = {
+                id: currentChatId,
+                title: firstMessage.substring(0, 35) + (firstMessage.length > 35 ? '...' : ''),
+                messages: [{ role: 'user', content: firstMessage }],
+                timestamp: Date.now()
+            };
+            chats.unshift(newChat);
+            renderHistory();
+        }
+
+        function saveChatToHistory(text, role) {
+            const chatIndex = chats.findIndex(c => c.id === currentChatId);
+            if (chatIndex > -1) {
+                chats[chatIndex].messages.push({ role, content: text });
+            }
+        }
+
+        function loadChat(id) {
+            const chat = chats.find(c => c.id === id);
+            if (!chat) return;
+
+            currentChatId = id;
+            conversationStage = 0;
+            awaitingConfirmation = false;
+            emptyState.classList.add('hidden');
+            messagesWrapper.innerHTML = '';
+            
+            chat.messages.forEach(msg => {
+                addMessage(msg.role, msg.content, true);
+            });
+
+            renderHistory();
+            
+            if (chat.messages.length > 0) {
+                inputWrapper.classList.add('visible');
+            }
+            
+            if (window.innerWidth <= 768) {
+                toggleSidebar();
+            }
+        }
+
+        function startNewChat() {
+            currentChatId = null;
+            conversationStage = 0;
+            selectedTopic = 0;
+            awaitingConfirmation = false;
+            emptyState.classList.remove('hidden');
+            messagesWrapper.innerHTML = '';
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            inputWrapper.classList.remove('visible');
+            
+            if (canvasOpened) {
+                closeCanvas();
+            }
+            
+            if (window.innerWidth <= 768) {
+                toggleSidebar();
+            }
+        }
+
+        function renderHistory() {
+            const list = document.getElementById('historyList');
+            
+            if (chats.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-history">
+                        <i class="far fa-comments empty-icon"></i>
+                        <span>لا توجد محادثات سابقة</span>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = '';
+            chats.forEach(chat => {
+                const item = document.createElement('div');
+                item.className = `history-item ${chat.id === currentChatId ? 'active' : ''}`;
+                item.onclick = () => loadChat(chat.id);
+                
+                const date = new Date(chat.timestamp);
+                const timeStr = date.toLocaleString('ar-SA', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    day: 'numeric',
+                    month: 'short'
+                });
+                
+                item.innerHTML = `
+                    <div class="history-title">${escapeHtml(chat.title)}</div>
+                    <div class="history-time">${timeStr}</div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        // =========================================
+        // أدوات مساعدة
+        // =========================================
+        function scrollToBottom() {
+            requestAnimationFrame(() => {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            });
+        }
+
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            const newHeight = Math.min(textarea.scrollHeight, 150);
+            textarea.style.height = newHeight + 'px';
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('active');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML.replace(/\n/g, '<br>');
+        }
+
+        // =========================================
+        // مستمعي الأحداث
+        // =========================================
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+            }
+        });
+
+        window.addEventListener('beforeunload', () => {
+            chats = [];
+        });
+
+    </script>
+</body>
+</html>

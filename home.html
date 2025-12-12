@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إرساء | الوكيل الرقمي الوطني</title>
+    
+    <link href="https://fonts.cdnfonts.com/css/neo-sans-arabic" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* =========================================
+           المتغيرات الأساسية
+           ========================================= */
+        :root {
+            --primary-deep: #0f172a;
+            --primary-blue: #0096B9;
+            --primary-glow: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-gold: #d4af37;
+            
+            --bg-body: #f8fafc;
+            --text-main: #1e293b;
+            --text-sub: #475569;
+            
+            --glass-surface: rgba(255, 255, 255, 0.9);
+            --glass-border: rgba(255, 255, 255, 0.95);
+            
+            --font-main: 'Neo Sans Arabic', sans-serif;
+            --ease-smooth: cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; }
+        html { scroll-behavior: smooth; font-size: 16px; }
+        
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* الخلفية */
+        .ambient-background {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100vh;
+            z-index: -1; overflow: hidden;
+            background: radial-gradient(circle at top center, #e8f0fc 0%, #f8fafc 100%);
+        }
+        .orb {
+            position: absolute; border-radius: 50%;
+            filter: blur(90px); opacity: 0.3;
+            animation: floatOrb 25s infinite ease-in-out;
+        }
+        .orb-1 { width: 500px; height: 500px; background: linear-gradient(45deg, var(--primary-blue), var(--accent-cyan)); top: -5%; right: -5%; }
+        .orb-2 { width: 450px; height: 450px; background: linear-gradient(45deg, var(--accent-cyan), #ffffff); bottom: -8%; left: -3%; animation-delay: -7s; }
+        @keyframes floatOrb { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(-25px, 35px) scale(1.08); } }
+
+        /* شاشة التحميل */
+        .splash-screen {
+            position: fixed; inset: 0; background: #ffffff;
+            z-index: 9999; display: flex; align-items: center; justify-content: center;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+        .splash-screen.hidden { opacity: 0; visibility: hidden; }
+        .splash-logo { width: 340px; height: auto; animation: logoPulse 2s infinite var(--ease-smooth); }
+        @keyframes logoPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+
+        /* =========================================
+           الهيرو - مُحسّن
+           ========================================= */
+        .hero-section {
+            min-height: 75vh;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 80px 20px 40px; text-align: center;
+        }
+
+        .hero-logo { width: 160px; height: auto; margin-bottom: 25px; opacity: 0; transform: translateY(20px); transition: all 1s var(--ease-smooth); }
+        
+        .hero-title {
+            font-size: clamp(2.5rem, 5vw, 3.2rem);
+            font-weight: 600; line-height: 1.15; margin-bottom: 18px;
+            color: var(--primary-deep); opacity: 0; transform: translateY(20px);
+            transition: all 1s var(--ease-smooth) 0.15s;
+        }
+        .text-gradient { background: linear-gradient(135deg, var(--primary-blue), var(--accent-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .hero-desc {
+            font-size: 1.2rem; color: var(--text-sub); max-width: 700px; margin: 0 auto 35px;
+            opacity: 0; transform: translateY(20px); transition: all 1s var(--ease-smooth) 0.3s;
+            font-weight: 400;
+        }
+
+        .btn-container {
+            display: flex; gap: 18px; justify-content: center; flex-wrap: wrap;
+            opacity: 0; transform: translateY(20px); transition: all 1s var(--ease-smooth) 0.45s;
+        }
+
+        .btn {
+            padding: 16px 42px; border-radius: 50px; font-size: 1.1rem; font-weight: 700;
+            cursor: pointer; transition: all 0.35s var(--ease-smooth); display: flex; align-items: center; gap: 12px; text-decoration: none;
+            border: none;
+        }
+        .btn-primary { background: var(--primary-deep); color: #fff; }
+        .btn-primary:hover { transform: translateY(-4px); background: var(--primary-blue); box-shadow: 0 20px 45px -8px rgba(37, 99, 235, 0.4); }
+        .btn-secondary { background: rgba(255, 255, 255, 0.7); color: var(--primary-deep); backdrop-filter: blur(10px); }
+        .btn-secondary:hover { background: #fff; border-color: var(--primary-blue); transform: translateY(-4px); color: var(--primary-blue); }
+
+        .loaded .hero-logo, .loaded .hero-title, .loaded .hero-desc, .loaded .btn-container { opacity: 1; transform: translateY(0); }
+
+        /* =========================================
+           قسم الإحصائيات السريعة - جديد
+           ========================================= */
+        .stats-section {
+            padding: 40px 20px;
+            max-width: 1200px; margin: 0 auto;
+            opacity: 0; transform: translateY(30px);
+            transition: all 0.9s ease;
+        }
+        .stats-section.visible { opacity: 1; transform: translateY(0); }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #ffffff, #f8fafc);
+            border-radius: 20px;
+            padding: 30px 20px;
+            text-align: center;
+            border: 1px solid rgba(37, 99, 235, 0.08);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+            transition: all 0.4s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(37, 99, 235, 0.12);
+        }
+
+        .stat-number {
+            font-size: 2.8rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--primary-blue), var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            color: var(--text-sub);
+            font-weight: 600;
+        }
+
+        /* =========================================
+           قسم المقولة - محسّن
+           ========================================= */
+        .quote-section {
+            max-width: 1000px;
+            margin: 40px auto 50px;
+            padding: 0 20px;
+            opacity: 0; transform: translateY(30px);
+            transition: all 0.9s ease;
+        }
+        .quote-section.visible { opacity: 1; transform: translateY(0); }
+
+        .quote-card {
+            background: #ffffff;
+            border-radius: 30px;
+            padding: 45px;
+            display: flex;
+            align-items: center;
+            gap: 45px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.06);
+            border: 1px solid rgba(0,0,0,0.04);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quote-card::before {
+            content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 5px;
+            background: linear-gradient(180deg, var(--primary-blue), var(--accent-cyan));
+        }
+
+        .quote-img-wrapper {
+            flex-shrink: 0;
+            width: 180px; height: 180px;
+            position: relative;
+        }
+
+        .quote-img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            border-radius: 22px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+            transform: rotate(-2deg);
+            transition: transform 0.4s ease;
+        }
+        .quote-card:hover .quote-img { transform: rotate(0deg) scale(1.02); }
+
+        .quote-content { flex: 1; position: relative; }
+        
+        .quote-icon {
+            font-size: 50px; color: rgba(37, 99, 235, 0.08);
+            position: absolute; top: -35px; right: -15px;
+        }
+
+        .quote-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1.6;
+            color: var(--primary-deep);
+            margin-bottom: 22px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .quote-author {
+            display: flex; flex-direction: column; gap: 4px;
+        }
+
+        .author-name {
+            font-size: 1.2rem; font-weight: 600; color: var(--primary-blue);
+        }
+        .author-title {
+            font-size: 0.95rem; color: var(--text-sub); letter-spacing: 0.5px;
+        }
+
+        /* =========================================
+           قسم التابز (الرؤية، الهدف، الرسالة) - جديد
+           ========================================= */
+        .tabs-section {
+            padding: 50px 20px;
+            max-width: 1100px; margin: 0 auto;
+            opacity: 0; transform: translateY(30px);
+            transition: all 0.9s ease;
+        }
+        .tabs-section.visible { opacity: 1; transform: translateY(0); }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: var(--primary-deep);
+            margin-bottom: 12px;
+        }
+
+        .section-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-sub);
+        }
+
+        .tabs-container {
+            background: #ffffff;
+            border-radius: 25px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.06);
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.04);
+        }
+
+        .tabs-header {
+            display: flex;
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+            background: linear-gradient(135deg, #fafbfc, #ffffff);
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 22px 30px;
+            background: transparent;
+            border: none;
+            font-family: var(--font-main);
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-sub);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .tab-button:hover {
+            color: var(--primary-blue);
+            background: rgba(37, 99, 235, 0.03);
+        }
+
+        .tab-button.active {
+            color: var(--primary-blue);
+            background: #ffffff;
+        }
+
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-blue), var(--accent-cyan));
+        }
+
+        .tab-icon {
+            font-size: 1.3rem;
+        }
+
+        .tabs-content {
+            padding: 45px;
+        }
+
+        .tab-panel {
+            display: none;
+            animation: fadeInTab 0.5s ease;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeInTab {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tab-content-text {
+            font-size: 1.2rem;
+            line-height: 1.9;
+            color: var(--text-main);
+            margin-bottom: 25px;
+        }
+
+        .tab-highlights {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+            margin-top: 25px;
+        }
+
+        .highlight-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 18px;
+            background: linear-gradient(135deg, #f8fafc, #ffffff);
+            border-radius: 15px;
+            border-right: 3px solid var(--primary-blue);
+        }
+
+        .highlight-icon {
+            font-size: 1.3rem;
+            color: var(--primary-blue);
+            margin-top: 3px;
+        }
+
+        .highlight-text {
+            flex: 1;
+            font-size: 1rem;
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        /* =========================================
+           المميزات - محسّن
+           ========================================= */
+        .features-section {
+            padding: 50px 20px;
+            max-width: 1300px; margin: 0 auto;
+        }
+
+        .features-header {
+            text-align: center;
+            margin-bottom: 45px;
+            opacity: 0; transform: translateY(30px);
+            transition: all 0.9s ease;
+        }
+        .features-header.visible { opacity: 1; transform: translateY(0); }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            opacity: 0; transform: translateY(30px);
+            transition: all 0.9s ease;
+        }
+        .features-grid.visible { opacity: 1; transform: translateY(0); }
+
+        .feature-box {
+            background: linear-gradient(140deg, #ffffff, #f8fafc);
+            border-radius: 25px;
+            padding: 40px 28px;
+            text-align: center;
+            position: relative;
+            transition: all 0.45s cubic-bezier(0.25, 0.8, 0.25, 1);
+            border: 1px solid rgba(255,255,255,0.8);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.04);
+            overflow: hidden;
+        }
+
+        .feature-box::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), transparent);
+            opacity: 0; transition: opacity 0.45s;
+        }
+
+        .feature-box:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 45px rgba(37, 99, 235, 0.13);
+        }
+        .feature-box:hover::after { opacity: 1; }
+
+        .feature-icon-circle {
+            width: 75px; height: 75px;
+            background: #ffffff;
+            border-radius: 50%;
+            margin: 0 auto 22px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px;
+            color: var(--primary-blue);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.06);
+            transition: transform 0.45s ease;
+        }
+        .feature-box:hover .feature-icon-circle { transform: scale(1.1) rotate(8deg); color: var(--accent-cyan); }
+
+        .feature-title {
+            font-size: 1.4rem; font-weight: 600;
+            margin-bottom: 12px; color: var(--primary-deep);
+        }
+
+        .feature-desc {
+            font-size: 1rem; color: var(--text-sub); line-height: 1.65;
+        }
+
+        /* =========================================
+           قسم المزايا التقنية - جديد
+           ========================================= */
+        .tech-section {
+            padding: 50px 20px;
+            max-width: 1100px; margin: 0 auto;
+            opacity: 0; transform: translateY(30px);
+            transition: all 0.9s ease;
+        }
+        .tech-section.visible { opacity: 1; transform: translateY(0); }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+        }
+
+        .tech-card {
+            background: #ffffff;
+            border-radius: 25px;
+            padding: 35px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.04);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tech-card::before {
+            content: '';
+            position: absolute;
+            top: 0; right: 0;
+            width: 100px; height: 100px;
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.05), transparent);
+            border-radius: 0 0 0 100%;
+        }
+
+        .tech-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 55px rgba(37, 99, 235, 0.12);
+        }
+
+        .tech-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 18px;
+        }
+
+        .tech-icon {
+            width: 55px; height: 55px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--accent-cyan));
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #ffffff;
+        }
+
+        .tech-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--primary-deep);
+        }
+
+        .tech-desc {
+            font-size: 1.05rem;
+            color: var(--text-sub);
+            line-height: 1.7;
+        }
+
+        /* =========================================
+           الفيديو - محسّن
+           ========================================= */
+        .video-section {
+            padding: 50px 20px 80px;
+            max-width: 1200px; margin: 0 auto;
+            opacity: 0; transform: scale(0.97);
+            transition: all 0.9s ease;
+        }
+        .video-section.visible { opacity: 1; transform: scale(1); }
+
+        .video-container {
+            width: 100%; border-radius: 30px; overflow: hidden;
+            position: relative; background: #000;
+            box-shadow: 0 35px 90px -15px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255,255,255,0.4);
+        }
+        video { width: 100%; display: block; cursor: pointer; }
+
+        .play-overlay {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.25);
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s; cursor: pointer;
+        }
+        .play-overlay.hidden { opacity: 0; pointer-events: none; }
+
+        .big-play-btn {
+            width: 100px; height: 100px;
+            background: rgba(255, 255, 255, 0.18); backdrop-filter: blur(12px);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            transition: transform 0.35s var(--ease-smooth);
+        }
+        .big-play-btn i { font-size: 35px; color: #fff; margin-left: 4px; }
+        .video-container:hover .big-play-btn { transform: scale(1.08); background: rgba(255, 255, 255, 0.25); }
+
+        /* =========================================
+           Responsive
+           ========================================= */
+        @media (max-width: 1024px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .tech-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 992px) {
+            .quote-card { flex-direction: column; text-align: center; gap: 28px; padding: 35px; }
+            .quote-card::before { width: 100%; height: 5px; top: 0; bottom: auto; right: 0; left: 0; }
+            .quote-icon { right: 50%; transform: translateX(50%); top: -45px; }
+            .features-grid { grid-template-columns: 1fr; max-width: 550px; margin: 0 auto; }
+            .tab-highlights { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .hero-title { font-size: 2.5rem; }
+            .hero-logo { width: 140px; }
+            .btn { width: 100%; justify-content: center; padding: 14px 35px; }
+            .splash-logo { width: 180px; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .tabs-header { flex-direction: column; }
+            .tab-button { padding: 18px 25px; }
+            .tabs-content { padding: 30px; }
+            .section-title { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-background">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+    </div>
+
+    <div class="splash-screen" id="splashScreen">
+        <img src="logo.png" alt="إرساء" class="splash-logo">
+    </div>
+
+    <!-- الهيرو -->
+    <section class="hero-section" id="heroSection">
+        <img src="lo.png" alt="إرساء" class="hero-logo">
+        
+        <div class="hero-content">
+            <h1 class="hero-title">
+                <span class="text-gradient">إرساء</span><br>
+                الوكيل الرقمي الوطني
+            </h1>
+            <p class="hero-desc">
+                منصة وطنية موحّدة لتنفيذ المهام الحكومية بتقنيات الذكاء الاصطناعي المتقدمة
+            </p>
+
+            <div class="btn-container">
+                <a href="login.html" class="btn btn-primary">
+                    <span>الدخول للمنصة</span>
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <a href="login.html" class="btn btn-secondary">
+                    <span>إنشاء حساب</span>
+                    <i class="fas fa-user-plus"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- الإحصائيات السريعة -->
+    <section class="stats-section scroll-animate">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">24/7</div>
+                <div class="stat-label">متاح على مدار الساعة</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">100%</div>
+                <div class="stat-label">أمان وموثوقية</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">AI</div>
+                <div class="stat-label">ذكاء اصطناعي متقدم</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">+50</div>
+                <div class="stat-label">خدمة حكومية</div>
+            </div>
+        </div>
+    </section>
+
+        <!-- الفيديو -->
+        <section class="video-section scroll-animate">
+            <div class="section-header">
+                <h2 class="section-title">شاهد إرساء</h2>
+                <p class="section-subtitle">تعرّف على المنصة وقدراتها المتقدمة</p>
+            </div>
+    
+            <div class="video-container">
+                <div class="play-overlay" id="playOverlay" onclick="toggleVideo()">
+                    <div class="big-play-btn"><i class="fas fa-play"></i></div>
+                </div>
+                <video id="mainVideo" preload="metadata">
+                    <source src="ersa.mp4" type="video/mp4">
+                </video>
+            </div>
+        </section>
+
+    <!-- المقولة -->
+    <section class="quote-section scroll-animate">
+        <div class="quote-card">
+            <div class="quote-img-wrapper">
+                <img src="im.jpg" alt="القيادة" class="quote-img">
+            </div>
+            <div class="quote-content">
+                <i class="fas fa-quote-right quote-icon"></i>
+                <p class="quote-text">
+                    "نحن نعيش في زمن الابتكارات العلمية والتقنيات غير المسبوقة وآفاق نمو غير محدودة مثل الذكاء الاصطناعي وإنترنت الأشياء"
+                </p>
+                <div class="quote-author">
+                    <span class="author-name">صاحب السمو الملكي</span>
+                    <span class="author-title">الأمير محمد بن سلمان بن عبدالعزيز آل سعود</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- قسم التابز (الرؤية، الهدف، الرسالة) -->
+    <section class="tabs-section scroll-animate">
+        <div class="section-header">
+            <h2 class="section-title">منظومة متكاملة</h2>
+            <p class="section-subtitle">رؤية طموحة وأهداف استراتيجية لمستقبل رقمي متقدم</p>
+        </div>
+
+        <div class="tabs-container">
+            <div class="tabs-header">
+                <button class="tab-button active" data-tab="vision">
+                    <i class="fas fa-eye tab-icon"></i>
+                    <span>الرؤية</span>
+                </button>
+                <button class="tab-button" data-tab="mission">
+                    <i class="fas fa-bullseye tab-icon"></i>
+                    <span>الرسالة</span>
+                </button>
+                <button class="tab-button" data-tab="goal">
+                    <i class="fas fa-flag-checkered tab-icon"></i>
+                    <span>الهدف</span>
+                </button>
+            </div>
+
+            <div class="tabs-content">
+                <!-- الرؤية -->
+                <div class="tab-panel active" id="vision">
+                    <p class="tab-content-text">
+                        ريادة عالمية في تقديم خدمات حكومية ذكية ومتكاملة عبر وكيل رقمي وطني موحّد، يعزز الكفاءة ويرتقي بتجربة المستفيدين، محققاً التحول الرقمي الشامل بما يتماشى مع رؤية المملكة 2030
+                    </p>
+                    <div class="tab-highlights">
+                        <div class="highlight-item">
+                            <i class="fas fa-globe highlight-icon"></i>
+                            <span class="highlight-text">ريادة عالمية في الخدمات الذكية</span>
+                        </div>
+                        <div class="highlight-item">
+                            <i class="fas fa-rocket highlight-icon"></i>
+                            <span class="highlight-text">تحول رقمي متقدم ومستدام</span>
+                        </div>
+                        <div class="highlight-item">
+                            <i class="fas fa-users highlight-icon"></i>
+                            <span class="highlight-text">تجربة استثنائية للمستفيدين</span>
+                        </div>
+                        <div class="highlight-item">
+                            <i class="fas fa-chart-line highlight-icon"></i>
+                            <span class="highlight-text">تحقيق أهداف رؤية 2030</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- الرسالة -->
+                <div class="tab-panel" id="mission">
+                    <p class="tab-content-text">
+                        توفير منصة وطنية موحدة تعتمد على الذكاء الاصطناعي لتبسيط وأتمتة الخدمات الحكومية، وتمكين المواطنين والمقيمين من إنجاز معاملاتهم بكفاءة وأمان عاليين، مع ضمان الشفافية والجودة
+                    </p>
+                    <div class="tab-highlights">
+                        <div class="highlight-item">
+                            <i class="fas fa-robot highlight-icon"></i>
+                            <span class="highlight-text">أتمتة ذكية للخدمات</span>
+                        </div>
+                        <div class="highlight-item">
+                            <i class="fas fa-shield-alt highlight-icon"></i>
+                            <span class="highlight-text">أمان وحماية متقدمة</span>
+                        </div>
+                        <div class="highlight-item">
+                            <i class="fas fa-check-circle highlight-icon"></i>
+                            <span class="highlight-text">شفافية وجودة عالية</span>
+                        </div>
+                        <div class="highlight-item">
+                            <i class="fas fa-hand-holding-heart highlight-icon"></i>
+                            <span class="highlight-text">تمكين شامل للمجتمع</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- الهدف -->
+                <div class="tab-panel" id="goal">
+                    <p class="tab-content-text">
+                        بناء نظام رقمي متكامل يجمع كافة الخدمات الحكومية في منصة واحدة، مدعوم بتقنيات الذكاء الاصطناعي والتعلم الآلي، لتحقيق أعلى مستويات الأداء والابتكار في القطاع الحكومي
+                    </p>
+                    <div class="tab-highlights">
+                        <div class="highlight-item">
+                            <i class="fas fa-link highlight-icon"></i>
+                            <span class="highlight-text">توحيد الخدمات في منصة واحدة</span>
+                        </div>
+                        <div class="highlight-item">
+                            <i class="fas fa-brain highlight-icon"></i>
+                            <span class="highlight-text">تطبيق الذكاء الاصطناعي المتقدم</span>
+                        </div>
+                        <div class="highlight-item">
+                            <i class="fas fa-award highlight-icon"></i>
+                            <span class="highlight-text">تحقيق التميز والابتكار</span>
+                        </div>
+                        <div class="highlight-item">
+                            <i class="fas fa-sync highlight-icon"></i>
+                            <span class="highlight-text">تطوير مستمر ومستدام</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- المميزات الرئيسية -->
+    <section class="features-section">
+        <div class="features-header scroll-animate">
+            <h2 class="section-title">مميزات المنصة</h2>
+            <p class="section-subtitle">حلول تقنية متطورة لخدمات حكومية استثنائية</p>
+        </div>
+
+        <div class="features-grid scroll-animate">
+            <div class="feature-box">
+                <div class="feature-icon-circle">
+                    <i class="fas fa-shield-halved"></i>
+                </div>
+                <h3 class="feature-title">حماية متقدمة</h3>
+                <p class="feature-desc">تشفير شامل وحماية بيومترية لضمان أمان بياناتك</p>
+            </div>
+            <div class="feature-box">
+                <div class="feature-icon-circle">
+                    <i class="fas fa-microchip"></i>
+                </div>
+                <h3 class="feature-title">ذكاء اصطناعي</h3>
+                <p class="feature-desc">خوارزميات متطورة لفهم احتياجاتك وتقديم حلول ذكية</p>
+            </div>
+            <div class="feature-box">
+                <div class="feature-icon-circle">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h3 class="feature-title">سرعة فائقة</h3>
+                <p class="feature-desc">استجابة فورية ومعالجة سريعة لجميع الطلبات</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- المزايا التقنية -->
+    <section class="tech-section scroll-animate">
+        <div class="section-header">
+            <h2 class="section-title">تقنيات رائدة</h2>
+            <p class="section-subtitle">أحدث الابتكارات في خدمة التحول الرقمي</p>
+        </div>
+
+        <div class="tech-grid">
+            <div class="tech-card">
+                <div class="tech-header">
+                    <div class="tech-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h3 class="tech-title">محادثة طبيعية</h3>
+                </div>
+                <p class="tech-desc">
+                    تفاعل بلغة عربية فصيحة مع الوكيل الذكي لإنجاز معاملاتك بسهولة تامة
+                </p>
+            </div>
+
+            <div class="tech-card">
+                <div class="tech-header">
+                    <div class="tech-icon">
+                        <i class="fas fa-network-wired"></i>
+                    </div>
+                    <h3 class="tech-title">تكامل شامل</h3>
+                </div>
+                <p class="tech-desc">
+                    اتصال مباشر مع جميع الجهات الحكومية لإنجاز المعاملات دون عناء
+                </p>
+            </div>
+
+            <div class="tech-card">
+                <div class="tech-header">
+                    <div class="tech-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3 class="tech-title">متاح في كل مكان</h3>
+                </div>
+                <p class="tech-desc">
+                    نفّذ معاملاتك من أي جهاز وفي أي وقت عبر تطبيق الجوال أو الموقع
+                </p>
+            </div>
+
+            <div class="tech-card">
+                <div class="tech-header">
+                    <div class="tech-icon">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <h3 class="tech-title">تقارير ذكية</h3>
+                </div>
+                <p class="tech-desc">
+                    احصل على تحليلات وإحصائيات دقيقة لمعاملاتك وخدماتك بشكل فوري
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        window.addEventListener('load', () => {
+            const splash = document.getElementById('splashScreen');
+            const hero = document.getElementById('heroSection');
+
+            setTimeout(() => {
+                splash.classList.add('hidden');
+                setTimeout(() => {
+                    hero.classList.add('loaded');
+                    setTimeout(() => splash.style.display = 'none', 800);
+                }, 300);
+            }, 1800);
+        });
+
+        const observer = new IntersectionObserver((entries, obs) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    const grid = entry.target.querySelector('.features-grid');
+                    if(grid) grid.classList.add('visible');
+                    obs.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.12 });
+
+        document.querySelectorAll('.scroll-animate').forEach(el => observer.observe(el));
+
+        // التابز
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabPanels = document.querySelectorAll('.tab-panel');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const targetTab = button.getAttribute('data-tab');
+                
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabPanels.forEach(panel => panel.classList.remove('active'));
+                
+                button.classList.add('active');
+                document.getElementById(targetTab).classList.add('active');
+            });
+        });
+
+        // الفيديو
+        const video = document.getElementById('mainVideo');
+        const overlay = document.getElementById('playOverlay');
+        const icon = overlay.querySelector('i');
+
+        function toggleVideo() {
+            if (video.paused) {
+                video.play();
+                overlay.classList.add('hidden');
+            } else {
+                video.pause();
+                overlay.classList.remove('hidden');
+                icon.className = 'fas fa-play';
+            }
+        }
+        video.addEventListener('ended', () => { 
+            overlay.classList.remove('hidden'); 
+            video.currentTime = 0; 
+        });
+        video.addEventListener('click', toggleVideo);
+    </script>
+</body>
+</html>

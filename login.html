@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول | إرساء</title>
+    
+    <link href="https://fonts.cdnfonts.com/css/neo-sans-arabic" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* =========================================
+           المتغيرات والتأسيس (نفس هوية الكود السابق)
+           ========================================= */
+        :root {
+            --bg-main: #fafafa;
+            --primary: #0096B9;
+            --primary-hover: #007a96;
+            --primary-gradient: linear-gradient(135deg, #0096B9 0%, #0087a8 100%);
+            --text-primary: #2d3748;
+            --text-secondary: #718096;
+            --border: #e2e8f0;
+            --error: #e53e3e;
+            --success: #38a169;
+            --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            --font-main: 'Neo Sans Arabic', 'Segoe UI', Tahoma, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background: var(--bg-main);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-image: radial-gradient(#e0f2f6 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        /* =========================================
+           بطاقة تسجيل الدخول
+           ========================================= */
+        .login-container {
+            width: 100%;
+            max-width: 440px;
+            padding: 20px;
+        }
+
+        .login-card {
+            padding: 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        /* تأثير الحركة عند الخطأ */
+        .login-card.shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        .logo-wrapper {
+            margin-bottom: 24px;
+            display: inline-block;
+        }
+
+        .logo {
+            width: 100px;
+            height: auto;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+
+        .title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+        }
+
+        /* =========================================
+           حقول الإدخال
+           ========================================= */
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+            text-align: right;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            transition: color 0.3s ease;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 50px 14px 16px; /* مسافة للأيقونة */
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-family: var(--font-main);
+            font-size: 1rem;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+
+        .form-input:focus {
+            background: white;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(0, 150, 185, 0.1);
+        }
+
+        .form-input:focus + .input-icon {
+            color: var(--primary);
+        }
+
+        .toggle-password {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 5px;
+        }
+
+        .toggle-password:hover {
+            color: var(--text-primary);
+        }
+
+        /* =========================================
+           رسائل الخطأ والزر
+           ========================================= */
+        .error-message {
+            background: #fff5f5;
+            color: var(--error);
+            font-size: 0.9rem;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none; /* مخفي افتراضياً */
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: 1px solid #feb2b2;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-family: var(--font-main);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 150, 185, 0.3);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: wait;
+        }
+
+        /* =========================================
+           صندوق الاعتمادات (Credentials Box)
+           ========================================= */
+        .credentials-box {
+            margin-top: 32px;
+            background: #f0f9ff;
+            border: 1px dashed var(--primary);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .cred-title {
+            font-size: 0.85rem;
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .cred-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border: 1px solid #e0f4f8;
+        }
+
+        .cred-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .cred-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .cred-value {
+            font-family: 'Consolas', 'Monaco', monospace; /* خط مختلف للأكواد */
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            font-weight: 600;
+            background: #f7fafc;
+            padding: 2px 6px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        /* =========================================
+           شاشة النجاح (Overlay)
+           ========================================= */
+        .success-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--primary);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.5s ease;
+        }
+
+        .success-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <div class="login-card" id="loginCard">
+            
+            <div class="logo-wrapper">
+                <img src="lo.png" alt="شعار إرساء" class="logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                <i class="fas fa-cube fa-3x" style="display:none; color: var(--primary);"></i>
+            </div>
+
+            <h1 class="title">تسجيل الدخول</h1>
+
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                
+                <div class="form-group">
+                    <label class="form-label">اسم المستخدم</label>
+                    <div class="input-wrapper">
+                        <i class="far fa-user input-icon"></i>
+                        <input type="text" id="username" class="form-input" placeholder="أدخل اسم المستخدم" autocomplete="off">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">كلمة المرور</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="password" id="password" class="form-input" placeholder="أدخل كلمة المرور">
+                        <i class="far fa-eye toggle-password" onclick="togglePasswordVisibility()" title="إظهار/إخفاء"></i>
+                    </div>
+                </div>
+
+                <div class="error-message" id="errorMessage">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>اسم المستخدم أو كلمة المرور غير صحيحة</span>
+                </div>
+
+                <button type="submit" class="submit-btn" id="loginBtn">
+                    <span>تسجيل الدخول</span>
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+
+            </form>
+
+            <div class="credentials-box">
+                <div class="cred-title">
+                    <i class="fas fa-info-circle"></i>
+                    <span>بيانات الدخول المصرح بها</span>
+                </div>
+                <div class="cred-item">
+                    <span class="cred-label">المستخدم:</span>
+                    <span class="cred-value">ersa</span>
+                </div>
+                <div class="cred-item">
+                    <span class="cred-label">كلمة المرور:</span>
+                    <span class="cred-value">ersa@852</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="success-overlay" id="successOverlay">
+        <div class="loader"></div>
+        <h2>تم تسجيل الدخول بنجاح</h2>
+        <p>سيتم تحويلك الآن إلى صفحة الدردشة...</p>
+    </div>
+
+    <script>
+        // =========================================
+        // المنطق البرمجي
+        // =========================================
+        
+        // البيانات الصحيحة
+        const VALID_USER = "ersa";
+        const VALID_PASS = "ersa@852";
+
+        const form = document.getElementById('loginForm');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const errorMessage = document.getElementById('errorMessage');
+        const loginCard = document.getElementById('loginCard');
+        const loginBtn = document.getElementById('loginBtn');
+        const successOverlay = document.getElementById('successOverlay');
+
+        function handleLogin(e) {
+            e.preventDefault(); // منع تحديث الصفحة
+
+            // إعادة تعيين الحالة
+            errorMessage.style.display = 'none';
+            loginCard.classList.remove('shake');
+            usernameInput.style.borderColor = 'var(--border)';
+            passwordInput.style.borderColor = 'var(--border)';
+
+            const enteredUser = usernameInput.value.trim();
+            const enteredPass = passwordInput.value.trim();
+
+            // محاكاة تحميل بسيط للواقعية
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> جاري التحقق...';
+
+            setTimeout(() => {
+                // التحقق من البيانات
+                if (enteredUser === VALID_USER && enteredPass === VALID_PASS) {
+                    // *** حالة النجاح ***
+                    success();
+                } else {
+                    // *** حالة الخطأ ***
+                    showError();
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = '<span>دخول آمن</span><i class="fas fa-arrow-left"></i>';
+                }
+            }, 800); // تأخير 800 جزء من الثانية
+        }
+
+        function showError() {
+            // إظهار رسالة الخطأ
+            errorMessage.style.display = 'flex';
+            
+            // إضافة اهتزاز للبطاقة
+            loginCard.classList.add('shake');
+            
+            // تلوين الحقول بالأحمر
+            usernameInput.style.borderColor = 'var(--error)';
+            passwordInput.style.borderColor = 'var(--error)';
+            
+            // إزالة كلاس الاهتزاز بعد انتهاء الحركة ليمكن تكرارها
+            setTimeout(() => {
+                loginCard.classList.remove('shake');
+            }, 500);
+        }
+
+        function success() {
+            // إظهار شاشة النجاح
+            successOverlay.classList.add('active');
+            
+            // الانتظار قليلاً لظهور الانيميشن ثم التحويل
+            setTimeout(() => {
+                // التوجيه إلى صفحة الدردشة
+                window.location.href = 'chat.html'; 
+            }, 2000);
+        }
+
+        // دالة لإظهار/إخفاء كلمة المرور
+        function togglePasswordVisibility() {
+            const icon = document.querySelector('.toggle-password');
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text";
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = "password";
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+    </script>
+</body>
+</html>
